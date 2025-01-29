@@ -43,7 +43,7 @@ platforms = ["windows-x64", "macos-arm64", "linux-x64", "macos-x64"]
 # # Optional: bundle 3rd party Python modules.
 # # https://docs.blender.org/manual/en/dev/advanced/extensions/python_wheels.html
 # DO NOT ALTER following line, it will be replaced by actual wheel list at runtime
-## WHEELS ##
+wheels = ['wheels/numpy-2.2.2-cp311-cp311-win_amd64.whl', 'wheels/pyluxcore-2.9a1.post14-cp311-cp311-win_amd64.whl']
 
 # # Optional: add-ons can list which resources they will require:
 # # * files (for access of any filesystem operations)
