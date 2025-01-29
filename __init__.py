@@ -12,10 +12,6 @@ import requests
 import bpy
 import addon_utils
 
-print()
-print('WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO')
-print()
-
 if bpy.app.version < (2, 93, 0):
     raise Exception("\n\nUnsupported Blender version. 2.93 or higher is required by BlendLuxCore.")
 
