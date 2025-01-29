@@ -12,6 +12,10 @@ import requests
 import bpy
 import addon_utils
 
+print()
+print('WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO')
+print()
+
 if bpy.app.version < (2, 93, 0):
     raise Exception("\n\nUnsupported Blender version. 2.93 or higher is required by BlendLuxCore.")
 
@@ -46,15 +50,8 @@ version_string = f'{bl_info["version"][0]}.{bl_info["version"][1]}{bl_info["warn
 # to a local BlendLuxCore repository, which will then be imported
 blc_dev_path = os.environ.get("BLC_DEV_MODE")
 am_in_extension = __name__.startswith('bl_ext.') # the init file in the local dev folder returns only BlendLuxCore
-if blc_dev_path and am_in_extension:
-    print()
-    print('~'*43)
-    print('~ USING LOCAL DEV VERSION OF BlendLuxCore ~')
-    print('~'*43)
-    print()
-    sys.path.insert(0, blc_dev_path)
-    from BlendLuxCore import *
-else:
+
+if am_in_extension:
     def get_wheel_filename(package_name):
         # Get the current Python version and architecture
         python_version = sys.version_info
@@ -173,8 +170,9 @@ else:
             manifest = list(fp)
         with open(manifest_path, "w") as fp:
             for line in manifest:
-                #if line.startswith("## WHEELS ##"):
-                if line.strip().startswith("wheels ="):
+                if line.startswith("## WHEELS ##"):
+                    fp.write(wheel_statement)
+                elif line.strip().startswith("wheels ="):
                     fp.write(wheel_statement)
                 else:
                     fp.write(line)
@@ -196,6 +194,15 @@ else:
         # "during handling of the above exception, ..."
         raise RuntimeError(msg + "\n\nImportError: %s" % error) from None
 
+if blc_dev_path and am_in_extension:
+    print()
+    print('~'*43)
+    print('~ USING LOCAL DEV VERSION OF BlendLuxCore ~')
+    print('~'*43)
+    print()
+    sys.path.insert(0, blc_dev_path)
+    from BlendLuxCore import *
+else:
     from . import properties, engine, handlers, operators, ui, nodes, utils
     from .utils.log import LuxCoreLog
 
