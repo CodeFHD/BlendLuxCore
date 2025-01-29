@@ -55,37 +55,38 @@ if am_in_extension:
         architecture = None
         machine = None
         if platform.system() == "Darwin":
-            architecture = 'macosx_'
+            architecture = "macosx_"
             machine = platform.machine()
         elif platform.system() == "Linux":
-            architecture = 'manylinux_'
-            machine = 'x86_64'
+            architecture = "manylinux_"
+            machine = "x86_64"
         elif platform.system() == "Windows":
-            architecture = 'win_' # including the underscore just to be safe this never pops up elsewhere in the future, 'win' is a pretty short string and common term
-            machine = 'amd64'
+            architecture = "win_" # including the underscore just to be safe this never pops up elsewhere in the future, 'win' is a pretty short string and common term
+            machine = "amd64"
 
         if architecture is None or machine is None:
-            print('Warning: Platform could not be resolved in function get_wheel_filename(). Check is considered failed.')
+            print("Warning: Platform could not be resolved in function get_wheel_filename(). Check is considered failed.")
             return None
 
         # Fetch package metadata from PyPI
-        url = f'https://pypi.org/pypi/{package_name}/json'
+        url = f"https://pypi.org/pypi/{package_name}/json"
         response = requests.get(url)
         if response.status_code != 200:
             raise ValueError(f"Failed to fetch metadata for package '{package_name}'")
 
         # Extract latest version of the package
         metadata = response.json()
-        versions = metadata['releases']
-        latest = list(versions.keys())[-1]
-
-        # Iterate through all versions and look for appropriate wheel files
-        for file in versions[latest]:
-            fname = file['filename']
-            if fname.endswith('.whl'):
-                wheel_filename = fname
-                if python_version_str in file['python_version'] and architecture in fname and machine in fname:
-                    return wheel_filename
+        releases = metadata["releases"]
+        versions = reversed(list(releases.keys())) # sort from newest to oldest
+        for version in versions:
+            for file in releases[version]:
+                if file["yanked"]:
+                    continue
+                fname = file["filename"]
+                if fname.endswith(".whl"):
+                    wheel_filename = fname
+                    if python_version_str in file["python_version"] and architecture in fname and machine in fname:
+                        return wheel_filename
         
         return None
 
