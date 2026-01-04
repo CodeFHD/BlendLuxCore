@@ -28,6 +28,8 @@ from . import view_layer, errorlog, misc
 
 from .misc import get_name_with_lib, pluralize
 
+from ..utils.export_attributes import ExportAttributesCache
+
 if _needs_reload:
     import importlib
 
@@ -102,7 +104,9 @@ def get_luxcore_name(datablock, is_viewport_render=True):
         # Final render - we can use pretty names
         key = get_pretty_name(datablock) + key
 
-    return sanitize_luxcore_name(key)
+    # including the object name in the key allows to use custom attributes
+    key = sanitize_luxcore_name(ExportAttributesCache.current_obj_name + key)
+    return key
 
 
 def obj_from_key(key, objects):

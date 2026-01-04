@@ -1,6 +1,8 @@
 import bpy
 from ..base import LuxCoreNodeTexture
 
+from ...utils.export_attributes import ExportAttributesCache
+from ...utils import sanitize_luxcore_name
 
 class LuxCoreNodeAttribute(LuxCoreNodeTexture, bpy.types.Node):
     bl_label = "Attribute"
@@ -61,7 +63,10 @@ class LuxCoreNodeAttribute(LuxCoreNodeTexture, bpy.types.Node):
         layout.prop(self, "attribute_name")
 
     def sub_export(self, exporter, depsgraph, props, luxcore_name=None, output_socket=None):
-        print('got obj_name:', obj_name)
+        obj_name = ExportAttributesCache.current_obj_name
+        # object name must be included in this key as well because self.create_props
+        # will otherwise return the same string for different objects
+        luxcore_name = sanitize_luxcore_name(obj_name + luxcore_name)
         self.update_color_value(obj_name=obj_name)
         definitions = {
             "type": "constfloat3",

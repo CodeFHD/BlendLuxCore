@@ -14,6 +14,7 @@ from ..hair import (
     get_hair_material_index,
     convert_hair_curves,
 )
+from ...utils.export_attributes import ExportAttributesCache
 from .exported_data import ExportedObject, ExportedPart
 from .. import light, material
 from ...utils.errorlog import LuxCoreErrorLog
@@ -496,6 +497,7 @@ class ObjectCache2:
         view_layer=None,
         engine=None,
     ):
+        ExportAttributesCache.set_obj_name(obj.name)
         """Convert one DepsgraphObjectInstance amd keep track of it with self.exported_objects"""
 
         if obj.data is None:
