@@ -1,5 +1,6 @@
 from .. import utils
 from . import (
+    attribute,
     band, blackbody, blenderblend, blenderclouds, blenderdistortednoise, blendermagic,
     blendermarble, blendermusgrave, blendernoise, blenderstucci, blendervoronoi,
     blenderwood, bombing, brick, brightcontrast, bump, checkerboard2d, checkerboard3d,
@@ -14,6 +15,7 @@ import nodeitems_utils
 from .tree import luxcore_node_categories_texture
 
 classes = (
+    attribute.LuxCoreNodeAttribute,
     band.ColorRampItem,
     band.LuxCoreNodeTexBand,
     blackbody.LuxCoreNodeTexBlackbody,

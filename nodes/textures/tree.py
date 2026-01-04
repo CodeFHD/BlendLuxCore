@@ -65,6 +65,7 @@ luxcore_node_categories_texture = [
     ]),
 
     LuxCoreNodeCategoryTexture("LUXCORE_TEXTURE_UTILS", "Utils", items=[
+        NodeItem("LuxCoreNodeAttribute", label="Attribute"),
         NodeItem("LuxCoreNodeTexBump", label="Bump"),
         # Possibly confusing, better deactivate (only needed in very rare cases anyway)
         # NodeItem("LuxCoreNodeTexNormalmap", label="Normalmap"),
