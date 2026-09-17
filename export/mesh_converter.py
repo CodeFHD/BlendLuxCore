@@ -1,6 +1,9 @@
 from contextlib import contextmanager
 from time import time
+import os
+import re
 import numpy as np
+import pyluxcore
 
 _needs_reload = "bpy" in locals()
 
@@ -48,6 +51,56 @@ def convert(
     exporter=None,
 ):
     start_time = time()
+
+    if (
+        hasattr(obj.luxcore, "use_proxy")
+        and obj.luxcore.use_proxy
+        and obj.luxcore.scene_shape != ""
+    ):
+        ply_path = bpy.path.abspath(obj.luxcore.scene_shape)
+
+        if not os.path.exists(ply_path):
+            LuxCoreErrorLog.add_warning(f"PLY file not found: {ply_path}", obj_name=obj.name)
+            return None
+
+        # If the given file ends in a numeric suffix (e.g. "tree007.ply"), treat it as
+        # one part of a multi-material proxy: LuxCore's filesaver ("Only write LuxCore
+        # scene") splits a multi-material mesh into one PLY per used material index,
+        # using exactly this naming scheme. We auto-discover the sibling files so the
+        # user only has to point at one of them, instead of listing every material by hand.
+        directory, filename = os.path.split(ply_path)
+        match = re.match(r"^(.*?)(\d+)(\.ply)$", filename, re.IGNORECASE)
+
+        parts = {}
+        if match:
+            base_name, _, ext = match.groups()
+            sibling_pattern = re.compile(
+                rf"^{re.escape(base_name)}(\d+){re.escape(ext)}$", re.IGNORECASE
+            )
+            for entry in os.listdir(directory):
+                entry_match = sibling_pattern.match(entry)
+                if entry_match:
+                    mat_index = int(entry_match.group(1))
+                    parts[mat_index] = os.path.join(directory, entry)
+        else:
+            # No numeric suffix found, fall back to a single-material proxy
+            parts[0] = ply_path
+
+        scene_props = pyluxcore.Properties()
+        mesh_definitions = []
+        for mat_index, part_path in sorted(parts.items()):
+            shape_key = f"{mesh_key}_{mat_index:03d}"
+            prefix = "scene.shapes." + shape_key + "."
+            scene_props.Set(pyluxcore.Property(prefix + "type", "mesh"))
+            scene_props.Set(pyluxcore.Property(prefix + "ply", part_path))
+            mesh_definitions.append((shape_key, mat_index))
+
+        luxcore_scene.Parse(scene_props)
+
+        if exporter and exporter.stats:
+            exporter.stats.export_time_meshes.value += time() - start_time
+
+        return caches.exported_data.ExportedMesh(mesh_definitions)
 
     with _prepare_mesh(obj, depsgraph) as mesh:
         if mesh is None:
