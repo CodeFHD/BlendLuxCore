@@ -68,14 +68,17 @@ def convert(
         # scene") splits a multi-material mesh into one PLY per used material index,
         # using exactly this naming scheme. We auto-discover the sibling files so the
         # user only has to point at one of them, instead of listing every material by hand.
+        # The suffix is always exactly 3 digits (material index, zero padded). Matching more
+        # would swallow digits belonging to the object name, e.g. "Cube.006" + "001" is
+        # "Cube.006001" and must give material index 1, not 6001.
         directory, filename = os.path.split(ply_path)
-        match = re.match(r"^(.*?)(\d+)(\.ply)$", filename, re.IGNORECASE)
+        match = re.match(r"^(.*?)(\d{3})(\.ply)$", filename, re.IGNORECASE)
 
         parts = {}
         if match:
             base_name, _, ext = match.groups()
             sibling_pattern = re.compile(
-                rf"^{re.escape(base_name)}(\d+){re.escape(ext)}$", re.IGNORECASE
+                rf"^{re.escape(base_name)}(\d{{3}}){re.escape(ext)}$", re.IGNORECASE
             )
             for entry in os.listdir(directory):
                 entry_match = sibling_pattern.match(entry)
