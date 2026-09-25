@@ -124,6 +124,7 @@ classes = (
     pointer_node.LUXCORE_MT_pointer_select_node_tree,
     pointer_node.LUXCORE_OT_pointer_show_node_tree,
     proxy.LUXCORE_OT_generate_proxy,
+    proxy.LUXCORE_OT_generate_proxy_selected,
     pyluxcoretools.LUXCORE_OT_install_pyside,
     pyluxcoretools.LUXCORE_OT_start_pyluxcoretools,
     render.LUXCORE_OT_request_denoiser_refresh,

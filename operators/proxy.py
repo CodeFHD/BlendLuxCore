@@ -94,12 +94,37 @@ def _export_mesh_by_material(obj, directory, apply_modifiers=True, apply_world_t
     return exported_files
 
 
+def _generate_proxy_for_object(obj):
+    """Export obj's mesh as per-material PLY proxy files and set obj up to use them.
+
+    Files are written to "//proxy/<obj.name>/" and obj.luxcore.scene_shape is stored
+    as a path relative to the .blend file, so the proxy setup survives the project
+    being moved or copied to another machine.
+
+    Returns the list of exported (absolute) file paths, or an empty list if nothing
+    was exported (e.g. empty mesh).
+    """
+    directory = bpy.path.abspath(f"//proxy/{obj.name}/")
+    os.makedirs(directory, exist_ok=True)
+
+    files = _export_mesh_by_material(
+        obj, directory, apply_modifiers=obj.luxcore.proxy_apply_modifiers
+    )
+
+    if not files:
+        return []
+
+    obj.luxcore.scene_shape = bpy.path.relpath(files[0])
+    obj.luxcore.use_proxy = True
+    return files
+
+
 class LUXCORE_OT_generate_proxy(bpy.types.Operator):
     bl_idname = "luxcore.generate_proxy"
     bl_label = "Generate Proxy"
     bl_description = (
         "Export this object's mesh, split into one PLY file per material, into "
-        "proxy/<object name>/meshes/ next to the .blend file, and set it up as proxy"
+        "proxy/<object name>/ next to the .blend file, and set it up as proxy"
     )
     bl_options = {"UNDO"}
 
@@ -114,19 +139,55 @@ class LUXCORE_OT_generate_proxy(bpy.types.Operator):
             return {"CANCELLED"}
 
         obj = context.object
-        directory = bpy.path.abspath(f"//proxy/{obj.name}/meshes/")
-        os.makedirs(directory, exist_ok=True)
-
-        files = _export_mesh_by_material(
-            obj, directory, apply_modifiers=obj.luxcore.proxy_apply_modifiers
-        )
+        files = _generate_proxy_for_object(obj)
 
         if not files:
             self.report({"ERROR"}, "No geometry exported (empty mesh?)")
             return {"CANCELLED"}
 
-        obj.luxcore.scene_shape = files[0]
-        obj.luxcore.use_proxy = True
+        self.report({"INFO"}, f"Generated {len(files)} proxy file(s) in {os.path.dirname(files[0])}")
+        return {"FINISHED"}
 
-        self.report({"INFO"}, f"Generated {len(files)} proxy file(s) in {directory}")
+
+class LUXCORE_OT_generate_proxy_selected(bpy.types.Operator):
+    bl_idname = "luxcore.generate_proxy_selected"
+    bl_label = "Generate Proxy for Selected"
+    bl_description = (
+        "Export the mesh of every selected mesh object, split into one PLY file per "
+        "material, into proxy/<object name>/ next to the .blend file, and set each up as proxy"
+    )
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return any(obj.type == "MESH" for obj in context.selected_objects)
+
+    def execute(self, context):
+        if not bpy.data.filepath:
+            self.report({"ERROR"}, "Save the .blend file first (proxy files are saved next to it)")
+            return {"CANCELLED"}
+
+        mesh_objects = [obj for obj in context.selected_objects if obj.type == "MESH"]
+        total_files = 0
+        failed = []
+
+        for obj in mesh_objects:
+            files = _generate_proxy_for_object(obj)
+            if files:
+                total_files += len(files)
+            else:
+                failed.append(obj.name)
+
+        succeeded = len(mesh_objects) - len(failed)
+        if failed:
+            self.report(
+                {"WARNING"},
+                f"Generated proxies for {succeeded}/{len(mesh_objects)} object(s). "
+                f"No geometry exported for: {', '.join(failed)}",
+            )
+        else:
+            self.report(
+                {"INFO"}, f"Generated {total_files} proxy file(s) for {succeeded} object(s)"
+            )
+
         return {"FINISHED"}

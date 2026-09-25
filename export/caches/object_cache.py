@@ -3,6 +3,7 @@ from array import array
 from functools import lru_cache
 from time import time
 import hashlib
+import os
 
 from ... import utils
 import pyluxcore
@@ -485,9 +486,14 @@ class ObjectCache2:
             # not on obj.data, or they would wrongly share/overwrite each other's cached geometry.
             # Hashed rather than used raw, since the path (slashes, drive letters, spaces) would
             # otherwise end up embedded in LuxCore SDL shape/property names.
-            abspath = bpy.path.abspath(obj.luxcore.scene_shape)
-            path_hash = hashlib.md5(abspath.encode("utf-8")).hexdigest()[:16]
-            return "proxy_" + path_hash
+            abspath = bpy.path.abspath(obj.luxcore.scene_shape, library=obj.original.library)
+            if os.path.exists(abspath):
+                path_hash = hashlib.md5(abspath.encode("utf-8")).hexdigest()[:16]
+                return "proxy_" + path_hash
+            # File missing: mesh_converter falls back to exporting obj's own Blender mesh,
+            # so the key must fall back too - otherwise two objects with different geometry
+            # but the same (missing) proxy path would collide on this path-based key and
+            # wrongly share each other's cached fallback mesh.
 
         # Important: we need the data of the original object, not the evaluated one.
         # The instancing state has to be part of the key because a non-instanced mesh

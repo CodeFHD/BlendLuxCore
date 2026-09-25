@@ -52,17 +52,26 @@ def convert(
 ):
     start_time = time()
 
-    if (
+    use_proxy = (
         hasattr(obj.luxcore, "use_proxy")
         and obj.luxcore.use_proxy
         and obj.luxcore.scene_shape != ""
-    ):
-        ply_path = bpy.path.abspath(obj.luxcore.scene_shape)
+    )
+
+    if use_proxy:
+        # library= makes relative ("//...") proxy paths resolve against the .blend file
+        # obj was linked from, not whichever file currently has it open - otherwise a
+        # linked object's proxy would only be found in the file that originally created it.
+        ply_path = bpy.path.abspath(obj.luxcore.scene_shape, library=obj.original.library)
 
         if not os.path.exists(ply_path):
-            LuxCoreErrorLog.add_warning(f"PLY file not found: {ply_path}", obj_name=obj.name)
-            return None
+            LuxCoreErrorLog.add_warning(
+                f"Proxy PLY file not found, falling back to exporting the Blender mesh: {ply_path}",
+                obj_name=obj.name,
+            )
+            use_proxy = False
 
+    if use_proxy:
         # If the given file ends in a numeric suffix (e.g. "tree007.ply"), treat it as
         # one part of a multi-material proxy: LuxCore's filesaver ("Only write LuxCore
         # scene") splits a multi-material mesh into one PLY per used material index,
