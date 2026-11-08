@@ -37,13 +37,9 @@ def _export_mesh_by_material(obj, directory, apply_modifiers=True, apply_world_t
             bm.from_mesh(mesh)
             bm.faces.ensure_lookup_table()
 
-            keep_verts = set()
-            for f in bm.faces:
-                if f.material_index == mat_index:
-                    keep_verts.update(f.verts)
-
-            verts_to_delete = [v for v in bm.verts if v not in keep_verts]
-            bmesh.ops.delete(bm, geom=verts_to_delete, context="VERTS")
+            faces_to_delete = [f for f in bm.faces if f.material_index != mat_index]
+            if faces_to_delete:
+                bmesh.ops.delete(bm, geom=faces_to_delete, context="FACES")
 
             if len(bm.faces) == 0:
                 bm.free()
