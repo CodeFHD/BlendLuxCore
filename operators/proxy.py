@@ -124,6 +124,7 @@ def _generate_proxy_for_object(obj):
 
     obj.luxcore.scene_shape = _to_relative_proxy_path(files[0])
     obj.luxcore.use_proxy = True
+    obj.update_tag()
     return files
 
 
