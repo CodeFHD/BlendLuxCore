@@ -54,22 +54,14 @@ def _export_mesh_by_material(obj, directory, apply_modifiers=True):
 
             filepath = os.path.join(directory, f"{base_name}{mat_index:03d}.ply")
 
-            if hasattr(bpy.ops.wm, "ply_export"):
-                bpy.ops.wm.ply_export(
-                    filepath=filepath,
-                    export_selected_objects=True,
-                    export_normals=True,
-                    export_uv=True,
-                    export_colors="SRGB",
-                )
-            else:
-                bpy.ops.export_mesh.ply(
-                    filepath=filepath,
-                    use_selection=True,
-                    use_normals=True,
-                    use_uv_coords=True,
-                    use_colors=True,
-                )
+
+            bpy.ops.wm.ply_export(
+                filepath=filepath,
+                export_selected_objects=True,
+                export_normals=True,
+                export_uv=True,
+                export_colors="SRGB",
+            )
 
             exported_files.append(filepath)
 
