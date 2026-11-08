@@ -27,6 +27,8 @@ def _export_mesh_by_material(obj, directory, apply_modifiers=True):
     exported_files = []
     original_selection = list(bpy.context.selected_objects)
     original_active = bpy.context.view_layer.objects.active
+    temp_obj = None
+    temp_mesh = None
 
     try:
         for mat_index in used_indices:
@@ -67,7 +69,13 @@ def _export_mesh_by_material(obj, directory, apply_modifiers=True):
 
             bpy.data.objects.remove(temp_obj, do_unlink=True)
             bpy.data.meshes.remove(temp_mesh)
+            temp_obj = None
+            temp_mesh = None
     finally:
+        if temp_obj is not None:
+            bpy.data.objects.remove(temp_obj, do_unlink=True)
+        if temp_mesh is not None:
+            bpy.data.meshes.remove(temp_mesh)
         if eval_obj is not None:
             eval_obj.to_mesh_clear()
         bpy.ops.object.select_all(action="DESELECT")
