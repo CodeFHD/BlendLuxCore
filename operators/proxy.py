@@ -4,7 +4,7 @@ import bmesh
 import bpy
 
 
-def _export_mesh_by_material(obj, directory, apply_modifiers=True, apply_world_transform=False):
+def _export_mesh_by_material(obj, directory, apply_modifiers=True):
     """Export obj's mesh as one PLY file per used material slot.
 
     Filenames follow "<obj.name><material_index:03d>.ply", the naming scheme
@@ -20,9 +20,6 @@ def _export_mesh_by_material(obj, directory, apply_modifiers=True, apply_world_t
     else:
         mesh = obj.data
 
-    if apply_world_transform:
-        mesh.transform(obj.matrix_world)
-
     used_indices = sorted({poly.material_index for poly in mesh.polygons})
     if not used_indices:
         used_indices = [0]
@@ -35,7 +32,6 @@ def _export_mesh_by_material(obj, directory, apply_modifiers=True, apply_world_t
         for mat_index in used_indices:
             bm = bmesh.new()
             bm.from_mesh(mesh)
-            bm.faces.ensure_lookup_table()
 
             faces_to_delete = [f for f in bm.faces if f.material_index != mat_index]
             if faces_to_delete:
